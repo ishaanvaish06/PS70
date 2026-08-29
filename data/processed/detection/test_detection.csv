@@ -1,0 +1,22 @@
+filename,wind_speed_kt,wind_speed_kmh,category,cyclone_detected,image_path,mock_bbox,structural_pattern
+48(2).jpg,48,88.9,Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/48(2).jpg,"[420, 190, 600, 370]",curved_band
+37.jpg,37,68.5,Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/37.jpg,"[420, 190, 600, 370]",curved_band
+28.jpg,28,51.9,Deep Depression,True,data/processed/classification/image_only_kaggle/images/28.jpg,"[420, 190, 600, 370]",shear_pattern
+39.jpg,39,72.2,Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/39.jpg,"[420, 190, 600, 370]",curved_band
+74.jpg,74,137.0,Very Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/74.jpg,"[420, 190, 600, 370]",eye_visible
+69.jpg,69,127.8,Very Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/69.jpg,"[420, 190, 600, 370]",eye_visible
+85(2).jpg,85,157.4,Very Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/85(2).jpg,"[420, 190, 600, 370]",eye_visible
+63.jpg,63,116.7,Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/63.jpg,"[420, 190, 600, 370]",eye_visible
+101.jpg,101,187.1,Extremely Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/101.jpg,"[420, 190, 600, 370]",eye_visible
+57(2).jpg,57,105.6,Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/57(2).jpg,"[420, 190, 600, 370]",eye_visible
+62.jpg,62,114.8,Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/62.jpg,"[420, 190, 600, 370]",eye_visible
+60(2).jpg,60,111.1,Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/60(2).jpg,"[420, 190, 600, 370]",eye_visible
+94.jpg,94,174.1,Extremely Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/94.jpg,"[420, 190, 600, 370]",eye_visible
+128.jpg,128,237.1,Super Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/128.jpg,"[420, 190, 600, 370]",curved_band
+36(3).jpg,36,66.7,Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/36(3).jpg,"[420, 190, 600, 370]",curved_band
+51.jpg,51,94.5,Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/51.jpg,"[420, 190, 600, 370]",eye_visible
+56.jpg,56,103.7,Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/56.jpg,"[420, 190, 600, 370]",eye_visible
+75.jpg,75,138.9,Very Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/75.jpg,"[420, 190, 600, 370]",eye_visible
+35(1).jpg,35,64.8,Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/35(1).jpg,"[420, 190, 600, 370]",curved_band
+64(2).jpg,64,118.5,Very Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/64(2).jpg,"[420, 190, 600, 370]",eye_visible
+73.jpg,73,135.2,Very Severe Cyclonic Storm,True,data/processed/classification/image_only_kaggle/images/73.jpg,"[420, 190, 600, 370]",eye_visible

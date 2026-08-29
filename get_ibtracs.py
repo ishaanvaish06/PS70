@@ -34,12 +34,15 @@ META_DIR = os.path.join("data", "metadata")
 RAW_PATH = os.path.join(RAW_DIR, "ibtracs_NI_raw.csv")
 CLEAN_PATH = os.path.join(META_DIR, "ibtracs_clean.csv")
 
-# IBTrACS goes back to the 1840s, but INSAT-3D launched in 2013 (INSAT-3DR
-# in 2016) — there is no real satellite imagery to pair with anything
-# earlier. Confirmed via check_coverage.py: pre-2013 data is ~83% missing
-# wind/category anyway, and can never be matched to imagery in Step 4.
-# Keeping it would waste effort later, so we cut it here at the source.
-YEAR_CUTOFF = 2013
+# IBTrACS goes back to the 1840s, but the ML dataset only needs the
+# modern/well-documented period. Per spec: restrict to ~1980-2025.
+# Note: INSAT-3D/3DR imagery only exists from 2013 onward, so rows before
+# 2013 will have track/intensity data but CANNOT be matched to real
+# satellite imagery later (Step 2/4). They're kept here for broader
+# track/context purposes, but Detection/multi-source Classification
+# training data will still only be the 2013+ subset in practice.
+MIN_YEAR = 1980
+MAX_YEAR = 2025
 
 # Columns we actually want. IBTrACS carries dozens of per-agency columns;
 # we keep IMD's own (newdelhi_*) numbers where present since this is the
@@ -135,6 +138,8 @@ def clean_ibtracs():
         "SEASON": "season",
         "NAME": "name",
         "SUBBASIN": "subbasin",
+        "BASIN": "basin",
+        "NATURE": "nature",
         "ISO_TIME": "timestamp",
         "LAT": "latitude",
         "LON": "longitude",
@@ -147,19 +152,29 @@ def clean_ibtracs():
     df["category"] = df["wind_speed_kmh"].apply(classify_imd_category)
 
     final_cols = [
-        "cyclone_id", "season", "name", "subbasin", "timestamp",
-        "latitude", "longitude", "wind_speed_kmh", "pressure_hpa", "category",
+        "cyclone_id", "season", "name", "basin", "subbasin", "nature",
+        "timestamp", "latitude", "longitude", "wind_speed_kmh",
+        "pressure_hpa", "category",
     ]
     final_cols = [c for c in final_cols if c in df.columns]
     df = df[final_cols]
 
-    # Restrict to the INSAT-3D/3DR satellite era — see YEAR_CUTOFF note above.
+    # Restrict to the requested historical period (~1980-2025).
     before_cutoff = len(df)
     before_cyclones = df["cyclone_id"].nunique()
-    df = df[df["timestamp"].dt.year >= YEAR_CUTOFF].reset_index(drop=True)
-    print(f"\nApplied satellite-era filter (>= {YEAR_CUTOFF}): "
+    df = df[(df["timestamp"].dt.year >= MIN_YEAR) &
+            (df["timestamp"].dt.year <= MAX_YEAR)].reset_index(drop=True)
+    print(f"\nApplied year filter ({MIN_YEAR}-{MAX_YEAR}): "
           f"{before_cyclones} -> {df['cyclone_id'].nunique()} cyclones, "
           f"{before_cutoff:,} -> {len(df):,} rows")
+
+    n_pre_2013 = (df["timestamp"].dt.year < 2013).sum()
+    if n_pre_2013:
+        print(f"[note] {n_pre_2013:,} rows are from before 2013 — these have "
+              f"NO possible INSAT-3D/3DR imagery match (satellite didn't "
+              f"exist yet). Fine for track/context data, but Detection and "
+              f"multi-source Classification training will still only use "
+              f"the 2013+ subset in practice.")
 
     no_category = df["category"].isna().sum()
     if no_category:
