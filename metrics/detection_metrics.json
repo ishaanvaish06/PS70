@@ -1,0 +1,10 @@
+{
+    "pattern_accuracy": 0.7142857142857143,
+    "pattern_precision": 0.7523809523809524,
+    "pattern_recall": 0.7142857142857143,
+    "pattern_f1": 0.6306522609043617,
+    "category_accuracy": 0.3333333333333333,
+    "category_precision": 0.2566137566137566,
+    "category_recall": 0.3333333333333333,
+    "category_f1": 0.23050379572118704
+}
