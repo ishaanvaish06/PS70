@@ -105,6 +105,7 @@ class CycloneImageDataset(Dataset):
         if self.transform is not None:
             img = self.transform(img)
         else:
+            img = img.resize((256, 256))
             img = np.array(img, dtype=np.float32) / 255.0
 
         if TORCH_AVAILABLE:
