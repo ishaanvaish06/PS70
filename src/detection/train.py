@@ -4,9 +4,14 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.optim import Adam
+from torchvision import transforms
 from tqdm import tqdm
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "../..")
+    )
+)
 
 from src.data.detection_dataset import CycloneDetectionDataset
 from src.detection.detector import CycloneDetector
@@ -19,10 +24,56 @@ LEARNING_RATE = 0.0001
 EPOCHS = 10
 
 
+def create_label_maps(dataset):
+
+    patterns = sorted(
+        dataset.df["structural_pattern"]
+        .dropna()
+        .unique()
+    )
+
+    categories = sorted(
+        dataset.df["category"]
+        .dropna()
+        .unique()
+    )
+
+    pattern_to_idx = {
+        pattern: idx
+        for idx, pattern in enumerate(patterns)
+    }
+
+    category_to_idx = {
+        category: idx
+        for idx, category in enumerate(categories)
+    }
+
+    return pattern_to_idx, category_to_idx
+
+
 def train():
 
-    train_dataset = CycloneDetectionDataset(split="train")
-    val_dataset = CycloneDetectionDataset(split="val")
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor()
+    ])
+
+    train_dataset = CycloneDetectionDataset(
+        split="train",
+        transform=transform
+    )
+
+    val_dataset = CycloneDetectionDataset(
+        split="val",
+        transform=transform
+    )
+
+    pattern_to_idx, category_to_idx = create_label_maps(
+        train_dataset
+    )
+
+    print("Pattern mapping:", pattern_to_idx)
+    print("Category mapping:", category_to_idx)
 
     train_loader = DataLoader(
         train_dataset,
@@ -37,8 +88,8 @@ def train():
     )
 
     model = CycloneDetector(
-        num_patterns=3,
-        num_categories=7
+        num_patterns=len(pattern_to_idx),
+        num_categories=len(category_to_idx)
     ).to(DEVICE)
 
     presence_loss = nn.BCEWithLogitsLoss()
@@ -52,7 +103,10 @@ def train():
 
     best_val_loss = float("inf")
 
-    os.makedirs("models/detection", exist_ok=True)
+    os.makedirs(
+        "models/detection",
+        exist_ok=True
+    )
 
     for epoch in range(EPOCHS):
 
@@ -66,11 +120,28 @@ def train():
 
             images = batch["image"].to(DEVICE)
 
-            detected = batch["detected"].float().unsqueeze(1).to(DEVICE)
+            detected = (
+                batch["detected"]
+                .float()
+                .unsqueeze(1)
+                .to(DEVICE)
+            )
 
-            pattern = batch["pattern"].long().to(DEVICE)
+            pattern = torch.tensor(
+                [
+                    pattern_to_idx[p]
+                    for p in batch["structural_pattern"]
+                ],
+                dtype=torch.long
+            ).to(DEVICE)
 
-            category = batch["category"].long().to(DEVICE)
+            category = torch.tensor(
+                [
+                    category_to_idx[c]
+                    for c in batch["category"]
+                ],
+                dtype=torch.long
+            ).to(DEVICE)
 
             optimizer.zero_grad()
 
@@ -119,11 +190,28 @@ def train():
 
                 images = batch["image"].to(DEVICE)
 
-                detected = batch["detected"].float().unsqueeze(1).to(DEVICE)
+                detected = (
+                    batch["detected"]
+                    .float()
+                    .unsqueeze(1)
+                    .to(DEVICE)
+                )
 
-                pattern = batch["pattern"].long().to(DEVICE)
+                pattern = torch.tensor(
+                    [
+                        pattern_to_idx[p]
+                        for p in batch["structural_pattern"]
+                    ],
+                    dtype=torch.long
+                ).to(DEVICE)
 
-                category = batch["category"].long().to(DEVICE)
+                category = torch.tensor(
+                    [
+                        category_to_idx[c]
+                        for c in batch["category"]
+                    ],
+                    dtype=torch.long
+                ).to(DEVICE)
 
                 outputs = model(images)
 
@@ -168,8 +256,14 @@ def train():
 
             best_val_loss = val_loss
 
+            checkpoint = {
+                "model_state_dict": model.state_dict(),
+                "pattern_to_idx": pattern_to_idx,
+                "category_to_idx": category_to_idx
+            }
+
             torch.save(
-                model.state_dict(),
+                checkpoint,
                 "models/detection/model_weights.pt"
             )
 
