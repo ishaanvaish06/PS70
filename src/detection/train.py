@@ -1,3 +1,4 @@
+import pandas as pd
 import os
 import sys
 import torch
@@ -24,16 +25,31 @@ LEARNING_RATE = 0.0001
 EPOCHS = 10
 
 
-def create_label_maps(dataset):
+def create_label_maps():
+
+    all_data = []
+
+    for split in ["train", "val", "test"]:
+
+        df = pd.read_csv(
+            f"data/processed/detection/{split}_detection.csv"
+        )
+
+        all_data.append(df)
+
+    combined_df = pd.concat(
+        all_data,
+        ignore_index=True
+    )
 
     patterns = sorted(
-        dataset.df["structural_pattern"]
+        combined_df["structural_pattern"]
         .dropna()
         .unique()
     )
 
     categories = sorted(
-        dataset.df["category"]
+        combined_df["category"]
         .dropna()
         .unique()
     )
@@ -68,9 +84,7 @@ def train():
         transform=transform
     )
 
-    pattern_to_idx, category_to_idx = create_label_maps(
-        train_dataset
-    )
+    pattern_to_idx, category_to_idx = create_label_maps()
 
     print("Pattern mapping:", pattern_to_idx)
     print("Category mapping:", category_to_idx)
