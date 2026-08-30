@@ -312,10 +312,149 @@ Shared Feature Representation
  ▼     ▼           ▼
 Presence Pattern   Category
 Head     Head       Head
+```
+
 
 ---
 
+#### Training
+
+The model was trained for **10 epochs** using:
+
+```text
+Batch Size: 16
+Learning Rate: 0.0001
+Optimizer: Adam
+Backbone: MobileNetV3-Small
+Device: CPU
+```
+
+Training and validation loss decreased during training.
+
+Final training results:
+
+```text
+Epoch 10 Training Loss: 1.9493
+Epoch 10 Validation Loss: 2.7200
+```
+
+The best validation checkpoint was saved as:
+
+```text
+models/detection/model_weights.pt
+```
+
 ---
+
+#### Test Dataset Evaluation
+
+The trained model was evaluated on the held-out test dataset.
+
+| Metric | Structural Pattern | Cyclone Category |
+|---|---:|---:|
+| Accuracy | 0.7143 | 0.3333 |
+| Precision | 0.7524 | 0.2566 |
+| Recall | 0.7143 | 0.3333 |
+| F1 Score | 0.6307 | 0.2305 |
+
+The structural pattern classifier achieved stronger performance than the category classifier.
+
+The lower category classification performance is expected because the dataset contains a relatively small and imbalanced number of satellite images across the seven IMD cyclone categories.
+
+Detailed evaluation metrics are available in:
+
+```text
+metrics/detection_metrics.json
+```
+
+---
+
+#### Sample Prediction
+
+Example inference output:
+
+```text
+Cyclone Detected: True
+Detection Confidence: 0.9641
+
+Structural Pattern: eye_visible
+Pattern Confidence: 0.6007
+
+Predicted Category: Cyclonic Storm
+Category Confidence: 0.2784
+```
+
+The corresponding visualization is available at:
+
+```text
+models/detection/sample_prediction.png
+```
+
+---
+
+#### Running Training
+
+```bash
+python src/detection/train.py
+```
+
+This trains the multi-task detection model and saves the best model checkpoint.
+
+---
+
+#### Running Evaluation
+
+```bash
+python src/detection/evaluate.py
+```
+
+This evaluates the trained model on the test dataset and generates evaluation metrics.
+
+---
+
+#### Running Inference
+
+```python
+from src.detection.inference import detect_cyclone
+
+result = detect_cyclone(
+    "path/to/cyclone_image.jpg"
+)
+
+print(result)
+```
+
+Example output:
+
+```python
+{
+    "detected": True,
+    "confidence": 0.9641,
+    "structural_pattern": "eye_visible",
+    "pattern_confidence": 0.6007,
+    "category": "Cyclonic Storm",
+    "category_confidence": 0.2784
+}
+```
+
+---
+
+#### Person 2 Deliverables
+
+- [x] `src/data/detection_dataset.py`
+- [x] `src/detection/detector.py`
+- [x] `src/detection/train.py`
+- [x] `src/detection/evaluate.py`
+- [x] `src/detection/inference.py`
+- [x] `models/detection/model_weights.pt`
+- [x] `models/detection/sample_prediction.png`
+- [x] `metrics/detection_metrics.json`
+- [x] Training pipeline
+- [x] Test evaluation
+- [x] Stand-alone inference
+
+---
+
 ### 🌪️ Person 3: Multi-Source Classification & Intensity Estimation
 *Detailed Guide:* [`future_task/tasks3.md`](file:///D:/AVV/SIH2026/PS70/future_task/tasks3.md)
 
