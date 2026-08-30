@@ -268,42 +268,54 @@ This section consolidates all implementation specifications, loss formulations, 
 ---
 
 ### 👁️ Person 2: Cyclone Detection & Structural Pattern Recognition
-*Detailed Guide:* [`future_task/tasks2.md`](file:///D:/AVV/SIH2026/PS70/future_task/tasks2.md)
 
-#### 1. Objectives & Meteorological Patterns
-Given an incoming satellite frame (INSAT-3D/3DR Infrared/Visible), the model detects cyclone presence, predicts approximate coordinates/bounding box, and tags one of the **4 Dvorak structural patterns**:
-- `"eye_visible"`: Well-defined, circular central clear eye with surrounding eyewall.
-- `"curved_band"`: Convective spiral bands wrapping cyclonically towards the center.
-- `"shear_pattern"`: Deep convective cloud mass displaced from the low-level circulation center.
-- `"no_organized_center"`: Weak or disorganized tropical disturbance / depression.
+#### Implementation Status
 
-#### 2. Architecture & Multi-Task Design
-- **Backbone**: Pretrained lightweight CNN (`MobileNetV3-Small`, `ResNet18`, or `EfficientNet-B0`) / `YOLOv8-cls`.
-- **Multi-Task Output Heads**:
-  1. **Presence Head**: Binary classification ($\text{Sigmoid} \to [0, 1]$). Loss: $\text{BCEWithLogitsLoss}$.
-  2. **Pattern Head**: Multi-class classification (Softmax over 4 structural classes). Loss: $\text{CrossEntropyLoss}$.
-  3. **Auxiliary Category Head**: Classification over 7 IMD categories to regularize latent features.
+A multi-task cyclone detection model has been implemented using a pretrained **MobileNetV3-Small** backbone.
 
-#### 3. Geographic Coordinate Conversion Utility
-```python
-def pixel_to_geo_coords(bbox, image_geo_bounds):
-    """
-    Converts pixel bounding box [x1, y1, x2, y2] to latitude/longitude center & bounds.
-    image_geo_bounds: {"min_lat": -5.0, "max_lat": 30.0, "min_lon": 50.0, "max_lon": 105.0}
-    """
-    pass
-```
+The model predicts three outputs from a satellite image:
 
-#### 4. Required Handoff Package Checklist:
-- [ ] `models/detection/model_weights.pt` (Trained model weights)
-- [ ] `src/detection/detector.py` (PyTorch model definition)
-- [ ] `src/detection/inference.py` (Stand-alone `detect_cyclone(image_input)` function)
-- [ ] `src/detection/evaluate.py` (Precision, Recall, F1, ROC-AUC, Confusion Matrix)
-- [ ] `models/detection/metrics.json` & `sample_predictions.png`
-- [ ] `src/detection/README.md` (Quickstart documentation)
+1. **Cyclone Presence**
+   - Binary classification
+   - Determines whether a cyclone is detected in the image.
+
+2. **Structural Pattern**
+   - `eye_visible`
+   - `curved_band`
+   - `shear_pattern`
+
+3. **IMD Cyclone Category**
+   - Depression
+   - Deep Depression
+   - Cyclonic Storm
+   - Severe Cyclonic Storm
+   - Very Severe Cyclonic Storm
+   - Extremely Severe Cyclonic Storm
+   - Super Cyclonic Storm
 
 ---
 
+#### Model Architecture
+
+The implemented model uses a shared MobileNetV3-Small feature extractor with three independent classification heads.
+
+```text
+Satellite Image
+       │
+       ▼
+MobileNetV3-Small Backbone
+       │
+       ▼
+Shared Feature Representation
+       │
+ ┌─────┼───────────┐
+ ▼     ▼           ▼
+Presence Pattern   Category
+Head     Head       Head
+
+---
+
+---
 ### 🌪️ Person 3: Multi-Source Classification & Intensity Estimation
 *Detailed Guide:* [`future_task/tasks3.md`](file:///D:/AVV/SIH2026/PS70/future_task/tasks3.md)
 
