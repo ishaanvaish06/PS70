@@ -1,0 +1,65 @@
+{
+  "persistence_baseline": {
+    "+6h": {
+      "mean_track_error_km": 30.295188903808594,
+      "median_track_error_km": 24.635379791259766,
+      "p90_track_error_km": 56.539859771728516,
+      "wind_speed_mae_kmh": 7.154452323913574
+    },
+    "+12h": {
+      "mean_track_error_km": 65.4985122680664,
+      "median_track_error_km": 53.825164794921875,
+      "p90_track_error_km": 122.79186248779297,
+      "wind_speed_mae_kmh": 14.407171249389648
+    },
+    "+24h": {
+      "mean_track_error_km": 150.13946533203125,
+      "median_track_error_km": 124.47786712646484,
+      "p90_track_error_km": 283.92596435546875,
+      "wind_speed_mae_kmh": 27.12040901184082
+    }
+  },
+  "ai_forecaster": {
+    "+6h": {
+      "mean_track_error_km": 30.62,
+      "median_track_error_km": 25.37,
+      "p90_track_error_km": 58.02,
+      "wind_speed_mae_kmh": 7.15
+    },
+    "+12h": {
+      "mean_track_error_km": 66.34,
+      "median_track_error_km": 55.77,
+      "p90_track_error_km": 119.13,
+      "wind_speed_mae_kmh": 14.41
+    },
+    "+24h": {
+      "mean_track_error_km": 152.71,
+      "median_track_error_km": 131.9,
+      "p90_track_error_km": 284.6,
+      "wind_speed_mae_kmh": 27.19
+    }
+  },
+  "comparative_lift": {
+    "+6h": {
+      "persistence_track_error_km": 30.3,
+      "ai_forecaster_track_error_km": 30.62,
+      "track_error_reduction_pct": "-1.1%",
+      "persistence_wind_mae_kmh": 7.15,
+      "ai_wind_mae_kmh": 7.15
+    },
+    "+12h": {
+      "persistence_track_error_km": 65.5,
+      "ai_forecaster_track_error_km": 66.34,
+      "track_error_reduction_pct": "-1.3%",
+      "persistence_wind_mae_kmh": 14.41,
+      "ai_wind_mae_kmh": 14.41
+    },
+    "+24h": {
+      "persistence_track_error_km": 150.14,
+      "ai_forecaster_track_error_km": 152.71,
+      "track_error_reduction_pct": "-1.7%",
+      "persistence_wind_mae_kmh": 27.12,
+      "ai_wind_mae_kmh": 27.19
+    }
+  }
+}

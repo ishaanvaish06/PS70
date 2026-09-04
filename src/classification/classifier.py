@@ -1,31 +1,16 @@
-"""
+﻿"""
 src/classification/classifier.py
-Model definitions for Person 3 (Cyclone Classification & Intensity Estimation).
-
+Classifiers for Multi-Source Cyclone Intensity & Category Estimation.
 Includes:
-1. ImageOnlyIntensityModel: PyTorch CNN baseline (ResNet18 / MobileNetV3) for 133 INSAT IR crops.
-2. MultisourceTabularModel: Gradient Boosted Decision Tree / MLP wrapper for 4,208 ERA5 + IBTrACS records.
-3. MultimodalFusionModel: PyTorch multimodal feature fusion combining image CNN embeddings with tabular MLP embeddings.
+1. MultispectralCycloneCNN: Deep CNN ingesting paired INSAT-3D Thermal IR + Visible imagery (2 channels).
+2. MultisourceTabularModel: Gradient-boosted / Random Forest model ingesting ERA5 reanalysis + IBTrACS features.
 """
 
 import os
 import pickle
 import numpy as np
-
-try:
-    import torch
-    import torch.nn as nn
-    from torchvision.models import resnet18, ResNet18_Weights, mobilenet_v3_small, MobileNet_V3_Small_Weights
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
-
-try:
-    from lightgbm import LGBMClassifier, LGBMRegressor
-    LIGHTGBM_AVAILABLE = True
-except ImportError:
-    LIGHTGBM_AVAILABLE = False
-
+import torch
+import torch.nn as nn
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 
@@ -52,151 +37,87 @@ IMD_SHORT_CODES = {
     "Super Cyclonic Storm": "SuCS"
 }
 
-if TORCH_AVAILABLE:
-    class ImageOnlyIntensityModel(nn.Module):
-        """
-        Model A: Single-sensor baseline CNN for INSAT IR crops.
-        Backbone: ResNet18 fine-tuned.
-        Dual Output Heads:
-          1. classifier: Logits for 7 IMD intensity categories.
-          2. wind_regressor: Predicted maximum sustained wind speed (km/h).
-        """
-        def __init__(self, num_classes=7, backbone_name="resnet18"):
-            super().__init__()
-            self.backbone_name = backbone_name
-            if backbone_name == "resnet18":
-                weights = ResNet18_Weights.DEFAULT
-                base_model = resnet18(weights=weights)
-                in_feats = base_model.fc.in_features
-                base_model.fc = nn.Identity()
-                self.backbone = base_model
-            else:
-                weights = MobileNet_V3_Small_Weights.DEFAULT
-                base_model = mobilenet_v3_small(weights=weights)
-                in_feats = base_model.classifier[0].in_features
-                base_model.classifier = nn.Identity()
-                self.backbone = base_model
+class ConvBlock(nn.Module):
+    def __init__(self, in_c, out_c, pool=True):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_c, out_c, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_c),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(out_c, out_c, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_c),
+            nn.LeakyReLU(0.1, inplace=True)
+        )
+        self.pool = nn.MaxPool2d(2, 2) if pool else nn.Identity()
 
-            self.classifier = nn.Sequential(
-                nn.Dropout(0.3),
-                nn.Linear(in_feats, 128),
-                nn.ReLU(),
-                nn.Linear(128, num_classes)
-            )
+    def forward(self, x):
+        return self.pool(self.conv(x))
 
-            self.wind_regressor = nn.Sequential(
-                nn.Dropout(0.3),
-                nn.Linear(in_feats, 64),
-                nn.ReLU(),
-                nn.Linear(64, 1)
-            )
+class MultispectralCycloneCNN(nn.Module):
+    """
+    Dual-Channel Satellite CNN (Channel 0: Thermal IR, Channel 1: Visible).
+    """
+    def __init__(self, in_channels=2, num_classes=7):
+        super().__init__()
+        self.features = nn.Sequential(
+            ConvBlock(in_channels, 32),   # 128x128
+            ConvBlock(32, 64),            # 64x64
+            ConvBlock(64, 128),           # 32x32
+            ConvBlock(128, 256),          # 16x16
+            ConvBlock(256, 256, pool=False),
+            nn.AdaptiveAvgPool2d((1, 1))
+        )
 
-        def forward(self, x):
-            # x shape: (B, 3, H, W)
-            feats = self.backbone(x)
-            logits = self.classifier(feats)
-            wind = self.wind_regressor(feats).squeeze(-1)
-            return logits, wind
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(0.4),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Linear(128, num_classes)
+        )
 
-    class MultimodalFusionModel(nn.Module):
-        """
-        Model C: Fusion network combining Satellite Image CNN features with ERA5 Tabular MLP features.
-        """
-        def __init__(self, num_tabular_features=6, num_classes=7):
-            super().__init__()
-            # Image Branch
-            weights = ResNet18_Weights.DEFAULT
-            base_cnn = resnet18(weights=weights)
-            in_feats_cnn = base_cnn.fc.in_features
-            base_cnn.fc = nn.Identity()
-            self.image_backbone = base_cnn
-            self.image_proj = nn.Sequential(
-                nn.Linear(in_feats_cnn, 64),
-                nn.ReLU()
-            )
+        self.wind_regressor = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(0.3),
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1)
+        )
 
-            # Tabular Branch
-            self.tabular_mlp = nn.Sequential(
-                nn.Linear(num_tabular_features, 64),
-                nn.ReLU(),
-                nn.Linear(64, 64),
-                nn.ReLU()
-            )
-
-            # Fused Classifier & Regressor (64 + 64 = 128)
-            self.classifier = nn.Sequential(
-                nn.Dropout(0.3),
-                nn.Linear(128, 64),
-                nn.ReLU(),
-                nn.Linear(64, num_classes)
-            )
-            self.wind_regressor = nn.Sequential(
-                nn.Dropout(0.3),
-                nn.Linear(128, 64),
-                nn.ReLU(),
-                nn.Linear(64, 1)
-            )
-
-        def forward(self, img_x, tab_x):
-            img_emb = self.image_proj(self.image_backbone(img_x))
-            tab_emb = self.tabular_mlp(tab_x)
-            fused = torch.cat([img_emb, tab_emb], dim=1)
-            logits = self.classifier(fused)
-            wind = self.wind_regressor(fused).squeeze(-1)
-            return logits, wind
-else:
-    class ImageOnlyIntensityModel:
-        def __init__(self, *args, **kwargs):
-            pass
-
-    class MultimodalFusionModel:
-        def __init__(self, *args, **kwargs):
-            pass
+    def forward(self, x):
+        feat = self.features(x)
+        logits = self.classifier(feat)
+        wind = self.wind_regressor(feat).squeeze(-1)
+        return logits, wind
 
 class MultisourceTabularModel:
     """
-    Model B: Multi-source environmental model (ERA5 reanalysis + IBTrACS location).
-    Uses LightGBM (or RandomForest fallback) for classification, wind speed regression, and central pressure regression.
+    Environmental Reanalysis + Location Tabular Model.
+    Features: [lat, lon, sst, pressure_msl, wind_u, wind_v]
     """
-    def __init__(self, use_lightgbm=True):
-        self.use_lightgbm = use_lightgbm and LIGHTGBM_AVAILABLE
-        self.feature_names = ["lat", "lon", "sst", "pressure_msl", "wind_u", "wind_v"]
+    def __init__(self):
         self.scaler = StandardScaler()
+        self.cls_model = RandomForestClassifier(n_estimators=150, max_depth=10, random_state=42, n_jobs=-1)
+        self.wind_model = RandomForestRegressor(n_estimators=150, max_depth=10, random_state=42, n_jobs=-1)
+        self.pres_model = RandomForestRegressor(n_estimators=150, max_depth=10, random_state=42, n_jobs=-1)
 
-        if self.use_lightgbm:
-            self.clf = LGBMClassifier(n_estimators=200, learning_rate=0.05, max_depth=6, random_state=42, verbose=-1)
-            self.wind_reg = LGBMRegressor(n_estimators=200, learning_rate=0.05, max_depth=6, random_state=42, verbose=-1)
-            self.pres_reg = LGBMRegressor(n_estimators=200, learning_rate=0.05, max_depth=6, random_state=42, verbose=-1)
-        else:
-            self.clf = RandomForestClassifier(n_estimators=150, max_depth=10, random_state=42)
-            self.wind_reg = RandomForestRegressor(n_estimators=150, max_depth=10, random_state=42)
-            self.pres_reg = RandomForestRegressor(n_estimators=150, max_depth=10, random_state=42)
-
-    def fit(self, X, y_cat, y_wind, y_pres=None):
-        X_scaled = self.scaler.fit_transform(X)
-        self.clf.fit(X_scaled, y_cat)
-        self.wind_reg.fit(X_scaled, y_wind)
-        if y_pres is not None and len(y_pres) > 0:
-            valid_mask = y_pres > 0
-            if np.any(valid_mask):
-                self.pres_reg.fit(X_scaled[valid_mask], y_pres[valid_mask])
+    def fit(self, X, y_cat, y_wind, y_pres):
+        X_clean = np.nan_to_num(X, nan=28.0)
+        X_scaled = self.scaler.fit_transform(X_clean)
+        self.cls_model.fit(X_scaled, y_cat)
+        self.wind_model.fit(X_scaled, y_wind)
+        valid_pres = (y_pres > 800.0)
+        if np.any(valid_pres):
+            self.pres_model.fit(X_scaled[valid_pres], y_pres[valid_pres])
 
     def predict(self, X):
-        X_scaled = self.scaler.transform(X)
-        pred_cat = self.clf.predict(X_scaled)
-        pred_wind = self.wind_reg.predict(X_scaled)
-        try:
-            pred_pres = self.pres_reg.predict(X_scaled)
-        except Exception:
-            pred_pres = np.full(len(X), 990.0)
-
-        # Get probabilities for confidence
-        if hasattr(self.clf, "predict_proba"):
-            probs = self.clf.predict_proba(X_scaled)
-            confs = np.max(probs, axis=1)
-        else:
-            confs = np.full(len(X), 0.85)
-
+        X_clean = np.nan_to_num(X, nan=28.0)
+        X_scaled = self.scaler.transform(X_clean)
+        pred_cat = self.cls_model.predict(X_scaled)
+        pred_wind = self.wind_model.predict(X_scaled)
+        pred_pres = self.pres_model.predict(X_scaled)
+        probs = self.cls_model.predict_proba(X_scaled)
+        confs = np.max(probs, axis=1)
         return pred_cat, pred_wind, pred_pres, confs
 
     def save(self, filepath):

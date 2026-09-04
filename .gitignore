@@ -1,0 +1,5 @@
+﻿# Git ignore
+__pycache__/
+*.pyc
+data/raw/ibtracs_global/
+data/raw/era5_pressure_levels/

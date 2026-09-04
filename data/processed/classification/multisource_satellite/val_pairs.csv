@@ -1,0 +1,20 @@
+filename,path_ir,path_vis,wind_speed_kt,wind_speed_kmh,category,imd_code,category_idx
+61(2).jpg,data/processed/classification/multisource_satellite/images_ir/61(2).jpg,data/processed/classification/multisource_satellite/images_vis/61(2).jpg,61.0,113.0,Severe Cyclonic Storm,SCS,3
+44(1).jpg,data/processed/classification/multisource_satellite/images_ir/44(1).jpg,data/processed/classification/multisource_satellite/images_vis/44(1).jpg,44.0,81.5,Cyclonic Storm,CS,2
+48(1).jpg,data/processed/classification/multisource_satellite/images_ir/48(1).jpg,data/processed/classification/multisource_satellite/images_vis/48(1).jpg,48.0,88.9,Cyclonic Storm,CS,2
+61(1).jpg,data/processed/classification/multisource_satellite/images_ir/61(1).jpg,data/processed/classification/multisource_satellite/images_vis/61(1).jpg,61.0,113.0,Severe Cyclonic Storm,SCS,3
+45(4).jpg,data/processed/classification/multisource_satellite/images_ir/45(4).jpg,data/processed/classification/multisource_satellite/images_vis/45(4).jpg,45.0,83.3,Cyclonic Storm,CS,2
+60(2).jpg,data/processed/classification/multisource_satellite/images_ir/60(2).jpg,data/processed/classification/multisource_satellite/images_vis/60(2).jpg,60.0,111.1,Severe Cyclonic Storm,SCS,3
+74(2).jpg,data/processed/classification/multisource_satellite/images_ir/74(2).jpg,data/processed/classification/multisource_satellite/images_vis/74(2).jpg,74.0,137.0,Very Severe Cyclonic Storm,VSCS,4
+47.jpg,data/processed/classification/multisource_satellite/images_ir/47.jpg,data/processed/classification/multisource_satellite/images_vis/47.jpg,47.0,87.0,Cyclonic Storm,CS,2
+53.jpg,data/processed/classification/multisource_satellite/images_ir/53.jpg,data/processed/classification/multisource_satellite/images_vis/53.jpg,53.0,98.2,Severe Cyclonic Storm,SCS,3
+40(1).jpg,data/processed/classification/multisource_satellite/images_ir/40(1).jpg,data/processed/classification/multisource_satellite/images_vis/40(1).jpg,40.0,74.1,Cyclonic Storm,CS,2
+86(1).jpg,data/processed/classification/multisource_satellite/images_ir/86(1).jpg,data/processed/classification/multisource_satellite/images_vis/86(1).jpg,86.0,159.3,Very Severe Cyclonic Storm,VSCS,4
+48(2).jpg,data/processed/classification/multisource_satellite/images_ir/48(2).jpg,data/processed/classification/multisource_satellite/images_vis/48(2).jpg,48.0,88.9,Cyclonic Storm,CS,2
+49(2).jpg,data/processed/classification/multisource_satellite/images_ir/49(2).jpg,data/processed/classification/multisource_satellite/images_vis/49(2).jpg,49.0,90.7,Severe Cyclonic Storm,SCS,3
+73.jpg,data/processed/classification/multisource_satellite/images_ir/73.jpg,data/processed/classification/multisource_satellite/images_vis/73.jpg,73.0,135.2,Very Severe Cyclonic Storm,VSCS,4
+42(3).jpg,data/processed/classification/multisource_satellite/images_ir/42(3).jpg,data/processed/classification/multisource_satellite/images_vis/42(3).jpg,42.0,77.8,Cyclonic Storm,CS,2
+37.jpg,data/processed/classification/multisource_satellite/images_ir/37.jpg,data/processed/classification/multisource_satellite/images_vis/37.jpg,37.0,68.5,Cyclonic Storm,CS,2
+69.jpg,data/processed/classification/multisource_satellite/images_ir/69.jpg,data/processed/classification/multisource_satellite/images_vis/69.jpg,69.0,127.8,Very Severe Cyclonic Storm,VSCS,4
+82(1).jpg,data/processed/classification/multisource_satellite/images_ir/82(1).jpg,data/processed/classification/multisource_satellite/images_vis/82(1).jpg,82.0,151.9,Very Severe Cyclonic Storm,VSCS,4
+102.jpg,data/processed/classification/multisource_satellite/images_ir/102.jpg,data/processed/classification/multisource_satellite/images_vis/102.jpg,102.0,188.9,Extremely Severe Cyclonic Storm,ESCS,5

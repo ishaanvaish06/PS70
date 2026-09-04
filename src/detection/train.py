@@ -1,288 +1,117 @@
-import pandas as pd
+﻿"""
+src/detection/train.py
+Training pipeline for Cyclone Detection, Structural Pattern Tagging, and Category Estimation.
+"""
+
 import os
 import sys
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torch.optim import Adam
 from torchvision import transforms
-from tqdm import tqdm
 
-sys.path.append(
-    os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "../..")
-    )
-)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
+from src.detection.detector import CycloneDetector, PATTERN_TO_IDX, CAT_TO_IDX
 from src.data.detection_dataset import CycloneDetectionDataset
-from src.detection.detector import CycloneDetector
 
-
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
-BATCH_SIZE = 16
-LEARNING_RATE = 0.0001
-EPOCHS = 10
-
-
-def create_label_maps():
-
-    all_data = []
-
-    for split in ["train", "val", "test"]:
-
-        df = pd.read_csv(
-            f"data/processed/detection/{split}_detection.csv"
-        )
-
-        all_data.append(df)
-
-    combined_df = pd.concat(
-        all_data,
-        ignore_index=True
-    )
-
-    patterns = sorted(
-        combined_df["structural_pattern"]
-        .dropna()
-        .unique()
-    )
-
-    categories = sorted(
-        combined_df["category"]
-        .dropna()
-        .unique()
-    )
-
-    pattern_to_idx = {
-        pattern: idx
-        for idx, pattern in enumerate(patterns)
-    }
-
-    category_to_idx = {
-        category: idx
-        for idx, category in enumerate(categories)
-    }
-
-    return pattern_to_idx, category_to_idx
-
-
-def train():
+def train_detection_model(epochs=12, batch_size=16, lr=1e-4, save_dir="models/detection"):
+    print("=" * 60)
+    print("TRAINING MULTI-TASK CYCLONE DETECTOR (PRESENCE & PATTERN)")
+    print("=" * 60)
 
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
-        transforms.ToTensor()
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    train_dataset = CycloneDetectionDataset(
-        split="train",
-        transform=transform
-    )
+    train_ds = CycloneDetectionDataset(split="train", transform=transform)
+    val_ds = CycloneDetectionDataset(split="val", transform=transform)
 
-    val_dataset = CycloneDetectionDataset(
-        split="val",
-        transform=transform
-    )
+    print(f"Train samples: {len(train_ds)}, Val samples: {len(val_ds)}")
 
-    pattern_to_idx, category_to_idx = create_label_maps()
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
 
-    print("Pattern mapping:", pattern_to_idx)
-    print("Category mapping:", category_to_idx)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=True
-    )
+    model = CycloneDetector(num_patterns=len(PATTERN_TO_IDX), num_categories=len(CAT_TO_IDX)).to(device)
 
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=False
-    )
+    crit_pres = nn.BCEWithLogitsLoss()
+    crit_pat = nn.CrossEntropyLoss()
+    crit_cat = nn.CrossEntropyLoss()
 
-    model = CycloneDetector(
-        num_patterns=len(pattern_to_idx),
-        num_categories=len(category_to_idx)
-    ).to(DEVICE)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
 
-    presence_loss = nn.BCEWithLogitsLoss()
-    pattern_loss = nn.CrossEntropyLoss()
-    category_loss = nn.CrossEntropyLoss()
-
-    optimizer = Adam(
-        model.parameters(),
-        lr=LEARNING_RATE
-    )
-
+    os.makedirs(save_dir, exist_ok=True)
+    best_path = os.path.join(save_dir, "model_weights.pt")
     best_val_loss = float("inf")
 
-    os.makedirs(
-        "models/detection",
-        exist_ok=True
-    )
-
-    for epoch in range(EPOCHS):
-
+    for epoch in range(1, epochs + 1):
         model.train()
+        train_loss = 0.0
 
-        total_loss = 0
-
-        progress = tqdm(train_loader)
-
-        for batch in progress:
-
-            images = batch["image"].to(DEVICE)
-
-            detected = (
-                batch["detected"]
-                .float()
-                .unsqueeze(1)
-                .to(DEVICE)
-            )
-
-            pattern = torch.tensor(
-                [
-                    pattern_to_idx[p]
-                    for p in batch["structural_pattern"]
-                ],
-                dtype=torch.long
-            ).to(DEVICE)
-
-            category = torch.tensor(
-                [
-                    category_to_idx[c]
-                    for c in batch["category"]
-                ],
-                dtype=torch.long
-            ).to(DEVICE)
+        for batch in train_loader:
+            imgs = batch["image"].to(device)
+            detected = batch["detected"].float().to(device)
+            pat_indices = torch.tensor([PATTERN_TO_IDX.get(p, 0) for p in batch["structural_pattern"]], dtype=torch.long).to(device)
+            cat_indices = torch.tensor([CAT_TO_IDX.get(c, 0) for c in batch["category"]], dtype=torch.long).to(device)
 
             optimizer.zero_grad()
+            out = model(imgs)
 
-            outputs = model(images)
+            l_pres = crit_pres(out["presence_logit"], detected)
+            l_pat = crit_pat(out["pattern_logits"], pat_indices)
+            l_cat = crit_cat(out["category_logits"], cat_indices)
 
-            loss_presence = presence_loss(
-                outputs["presence"],
-                detected
-            )
-
-            loss_pattern = pattern_loss(
-                outputs["pattern"],
-                pattern
-            )
-
-            loss_category = category_loss(
-                outputs["category"],
-                category
-            )
-
-            loss = (
-                loss_presence
-                + loss_pattern
-                + loss_category
-            )
-
+            loss = 1.5 * l_pres + 1.0 * l_pat + 0.5 * l_cat
             loss.backward()
-
             optimizer.step()
+            train_loss += loss.item() * len(imgs)
 
-            total_loss += loss.item()
+        train_loss /= len(train_ds)
 
-            progress.set_description(
-                f"Epoch {epoch + 1}/{EPOCHS}"
-            )
-
-        train_loss = total_loss / len(train_loader)
-
+        # Validation
         model.eval()
-
-        val_loss = 0
+        val_loss = 0.0
+        pres_correct, pat_correct, total = 0, 0, 0
 
         with torch.no_grad():
-
             for batch in val_loader:
+                imgs = batch["image"].to(device)
+                detected = batch["detected"].float().to(device)
+                pat_indices = torch.tensor([PATTERN_TO_IDX.get(p, 0) for p in batch["structural_pattern"]], dtype=torch.long).to(device)
+                cat_indices = torch.tensor([CAT_TO_IDX.get(c, 0) for c in batch["category"]], dtype=torch.long).to(device)
 
-                images = batch["image"].to(DEVICE)
+                out = model(imgs)
+                l_pres = crit_pres(out["presence_logit"], detected)
+                l_pat = crit_pat(out["pattern_logits"], pat_indices)
+                l_cat = crit_cat(out["category_logits"], cat_indices)
+                loss = 1.5 * l_pres + 1.0 * l_pat + 0.5 * l_cat
+                val_loss += loss.item() * len(imgs)
 
-                detected = (
-                    batch["detected"]
-                    .float()
-                    .unsqueeze(1)
-                    .to(DEVICE)
-                )
+                pres_pred = (torch.sigmoid(out["presence_logit"]) >= 0.5).float()
+                pres_correct += (pres_pred == detected).sum().item()
 
-                pattern = torch.tensor(
-                    [
-                        pattern_to_idx[p]
-                        for p in batch["structural_pattern"]
-                    ],
-                    dtype=torch.long
-                ).to(DEVICE)
+                pat_pred = torch.argmax(out["pattern_logits"], dim=1)
+                pat_correct += (pat_pred == pat_indices).sum().item()
+                total += len(imgs)
 
-                category = torch.tensor(
-                    [
-                        category_to_idx[c]
-                        for c in batch["category"]
-                    ],
-                    dtype=torch.long
-                ).to(DEVICE)
+        val_loss /= len(val_ds)
+        pres_acc = (pres_correct / total) * 100.0 if total > 0 else 0.0
+        pat_acc = (pat_correct / total) * 100.0 if total > 0 else 0.0
 
-                outputs = model(images)
-
-                loss_presence = presence_loss(
-                    outputs["presence"],
-                    detected
-                )
-
-                loss_pattern = pattern_loss(
-                    outputs["pattern"],
-                    pattern
-                )
-
-                loss_category = category_loss(
-                    outputs["category"],
-                    category
-                )
-
-                loss = (
-                    loss_presence
-                    + loss_pattern
-                    + loss_category
-                )
-
-                val_loss += loss.item()
-
-        val_loss = val_loss / len(val_loader)
-
-        print(
-            f"\nEpoch {epoch + 1}/{EPOCHS}"
-        )
-
-        print(
-            f"Train Loss: {train_loss:.4f}"
-        )
-
-        print(
-            f"Validation Loss: {val_loss:.4f}"
-        )
+        print(f"Epoch {epoch:02d}/{epochs} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | "
+              f"Presence Acc: {pres_acc:.1f}% | Pattern Acc: {pat_acc:.1f}%")
 
         if val_loss < best_val_loss:
-
             best_val_loss = val_loss
+            torch.save(model.state_dict(), best_path)
 
-            checkpoint = {
-                "model_state_dict": model.state_dict(),
-                "pattern_to_idx": pattern_to_idx,
-                "category_to_idx": category_to_idx
-            }
-
-            torch.save(
-                checkpoint,
-                "models/detection/model_weights.pt"
-            )
-
-            print("Best model saved!")
-
+    print(f"\nTraining Complete! Best model saved to: {best_path}")
+    return best_path
 
 if __name__ == "__main__":
-    train()
+    train_detection_model()

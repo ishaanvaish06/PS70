@@ -268,190 +268,39 @@ This section consolidates all implementation specifications, loss formulations, 
 ---
 
 ### 👁️ Person 2: Cyclone Detection & Structural Pattern Recognition
+*Detailed Guide:* [`future_task/tasks2.md`](file:///D:/AVV/SIH2026/PS70/future_task/tasks2.md)
 
-#### Implementation Status
+#### 1. Objectives & Meteorological Patterns
+Given an incoming satellite frame (INSAT-3D/3DR Infrared/Visible), the model detects cyclone presence, predicts approximate coordinates/bounding box, and tags one of the **4 Dvorak structural patterns**:
+- `"eye_visible"`: Well-defined, circular central clear eye with surrounding eyewall.
+- `"curved_band"`: Convective spiral bands wrapping cyclonically towards the center.
+- `"shear_pattern"`: Deep convective cloud mass displaced from the low-level circulation center.
+- `"no_organized_center"`: Weak or disorganized tropical disturbance / depression.
 
-A multi-task cyclone detection model has been implemented using a pretrained **MobileNetV3-Small** backbone.
+#### 2. Architecture & Multi-Task Design
+- **Backbone**: Pretrained lightweight CNN (`MobileNetV3-Small`, `ResNet18`, or `EfficientNet-B0`) / `YOLOv8-cls`.
+- **Multi-Task Output Heads**:
+  1. **Presence Head**: Binary classification ($\text{Sigmoid} \to [0, 1]$). Loss: $\text{BCEWithLogitsLoss}$.
+  2. **Pattern Head**: Multi-class classification (Softmax over 4 structural classes). Loss: $\text{CrossEntropyLoss}$.
+  3. **Auxiliary Category Head**: Classification over 7 IMD categories to regularize latent features.
 
-The model predicts three outputs from a satellite image:
-
-1. **Cyclone Presence**
-   - Binary classification
-   - Determines whether a cyclone is detected in the image.
-
-2. **Structural Pattern**
-   - `eye_visible`
-   - `curved_band`
-   - `shear_pattern`
-
-3. **IMD Cyclone Category**
-   - Depression
-   - Deep Depression
-   - Cyclonic Storm
-   - Severe Cyclonic Storm
-   - Very Severe Cyclonic Storm
-   - Extremely Severe Cyclonic Storm
-   - Super Cyclonic Storm
-
----
-
-#### Model Architecture
-
-The implemented model uses a shared MobileNetV3-Small feature extractor with three independent classification heads.
-
-```text
-Satellite Image
-       │
-       ▼
-MobileNetV3-Small Backbone
-       │
-       ▼
-Shared Feature Representation
-       │
- ┌─────┼───────────┐
- ▼     ▼           ▼
-Presence Pattern   Category
-Head     Head       Head
-```
-
-
----
-
-#### Training
-
-The model was trained for **10 epochs** using:
-
-```text
-Batch Size: 16
-Learning Rate: 0.0001
-Optimizer: Adam
-Backbone: MobileNetV3-Small
-Device: CPU
-```
-
-Training and validation loss decreased during training.
-
-Final training results:
-
-```text
-Epoch 10 Training Loss: 1.9493
-Epoch 10 Validation Loss: 2.7200
-```
-
-The best validation checkpoint was saved as:
-
-```text
-models/detection/model_weights.pt
-```
-
----
-
-#### Test Dataset Evaluation
-
-The trained model was evaluated on the held-out test dataset.
-
-| Metric | Structural Pattern | Cyclone Category |
-|---|---:|---:|
-| Accuracy | 0.7143 | 0.3333 |
-| Precision | 0.7524 | 0.2566 |
-| Recall | 0.7143 | 0.3333 |
-| F1 Score | 0.6307 | 0.2305 |
-
-The structural pattern classifier achieved stronger performance than the category classifier.
-
-The lower category classification performance is expected because the dataset contains a relatively small and imbalanced number of satellite images across the seven IMD cyclone categories.
-
-Detailed evaluation metrics are available in:
-
-```text
-metrics/detection_metrics.json
-```
-
----
-
-#### Sample Prediction
-
-Example inference output:
-
-```text
-Cyclone Detected: True
-Detection Confidence: 0.9641
-
-Structural Pattern: eye_visible
-Pattern Confidence: 0.6007
-
-Predicted Category: Cyclonic Storm
-Category Confidence: 0.2784
-```
-
-The corresponding visualization is available at:
-
-```text
-models/detection/sample_prediction.png
-```
-
----
-
-#### Running Training
-
-```bash
-python src/detection/train.py
-```
-
-This trains the multi-task detection model and saves the best model checkpoint.
-
----
-
-#### Running Evaluation
-
-```bash
-python src/detection/evaluate.py
-```
-
-This evaluates the trained model on the test dataset and generates evaluation metrics.
-
----
-
-#### Running Inference
-
+#### 3. Geographic Coordinate Conversion Utility
 ```python
-from src.detection.inference import detect_cyclone
-
-result = detect_cyclone(
-    "path/to/cyclone_image.jpg"
-)
-
-print(result)
+def pixel_to_geo_coords(bbox, image_geo_bounds):
+    """
+    Converts pixel bounding box [x1, y1, x2, y2] to latitude/longitude center & bounds.
+    image_geo_bounds: {"min_lat": -5.0, "max_lat": 30.0, "min_lon": 50.0, "max_lon": 105.0}
+    """
+    pass
 ```
 
-Example output:
-
-```python
-{
-    "detected": True,
-    "confidence": 0.9641,
-    "structural_pattern": "eye_visible",
-    "pattern_confidence": 0.6007,
-    "category": "Cyclonic Storm",
-    "category_confidence": 0.2784
-}
-```
-
----
-
-#### Person 2 Deliverables
-
-- [x] `src/data/detection_dataset.py`
-- [x] `src/detection/detector.py`
-- [x] `src/detection/train.py`
-- [x] `src/detection/evaluate.py`
-- [x] `src/detection/inference.py`
-- [x] `models/detection/model_weights.pt`
-- [x] `models/detection/sample_prediction.png`
-- [x] `metrics/detection_metrics.json`
-- [x] Training pipeline
-- [x] Test evaluation
-- [x] Stand-alone inference
+#### 4. Required Handoff Package Checklist:
+- [ ] `models/detection/model_weights.pt` (Trained model weights)
+- [ ] `src/detection/detector.py` (PyTorch model definition)
+- [ ] `src/detection/inference.py` (Stand-alone `detect_cyclone(image_input)` function)
+- [ ] `src/detection/evaluate.py` (Precision, Recall, F1, ROC-AUC, Confusion Matrix)
+- [ ] `models/detection/metrics.json` & `sample_predictions.png`
+- [ ] `src/detection/README.md` (Quickstart documentation)
 
 ---
 

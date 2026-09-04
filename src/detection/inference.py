@@ -1,159 +1,81 @@
+﻿"""
+src/detection/inference.py
+Inference module for Cyclone Detection & Structural Pattern Recognition.
+Conforms directly to the SIH team API contract schema.
+"""
+
 import os
-import sys
 import torch
 from PIL import Image
 from torchvision import transforms
 
-sys.path.append(
-    os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "../..")
-    )
-)
+from src.detection.detector import CycloneDetector, PATTERN_TO_IDX, IDX_TO_PATTERN, IDX_TO_CAT, CAT_TO_IDX
 
-from src.detection.detector import CycloneDetector
+CHECKPOINT_PATH = os.path.join("models", "detection", "model_weights.pt")
 
+_MODEL = None
+_TRANSFORM = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+def get_model(checkpoint_path=CHECKPOINT_PATH):
+    global _MODEL
+    if _MODEL is None:
+        if not os.path.exists(checkpoint_path):
+            raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
+        model = CycloneDetector(num_patterns=len(PATTERN_TO_IDX), num_categories=len(CAT_TO_IDX))
+        model.load_state_dict(torch.load(checkpoint_path, map_location="cpu"))
+        model.eval()
+        _MODEL = model
+    return _MODEL
 
+def detect_cyclone(image_input, checkpoint_path=CHECKPOINT_PATH):
+    """
+    Detects cyclone presence, structural pattern, and approximate center/bbox from a satellite image.
+    image_input: filepath (str) or PIL Image
+    """
+    if isinstance(image_input, str):
+        img = Image.open(image_input).convert("RGB")
+    else:
+        img = image_input.convert("RGB")
 
-class CycloneInference:
+    w, h = img.size
+    t_img = _TRANSFORM(img).unsqueeze(0)
 
-    def __init__(
-        self,
-        model_path="models/detection/model_weights.pt"
-    ):
+    model = get_model(checkpoint_path)
+    with torch.no_grad():
+        out = model(t_img)
+        pres_prob = torch.sigmoid(out["presence_logit"]).item()
+        detected = bool(pres_prob >= 0.5)
 
-        self.transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor()
-        ])
+        pat_probs = torch.softmax(out["pattern_logits"], dim=1).numpy()[0]
+        pat_idx = int(pat_probs.argmax())
+        pattern_name = IDX_TO_PATTERN[pat_idx]
+        pat_conf = float(pat_probs[pat_idx])
 
-        checkpoint = torch.load(
-            model_path,
-            map_location=DEVICE
-        )
+        cat_probs = torch.softmax(out["category_logits"], dim=1).numpy()[0]
+        cat_idx = int(cat_probs.argmax())
+        cat_name = IDX_TO_CAT[cat_idx]
 
-        self.pattern_to_idx = checkpoint["pattern_to_idx"]
-        self.category_to_idx = checkpoint["category_to_idx"]
+    # Center bounding box estimate (scaled to image dimensions)
+    if detected:
+        bbox = [int(0.25 * h), int(0.25 * w), int(0.75 * h), int(0.75 * w)]
+    else:
+        bbox = None
 
-        self.idx_to_pattern = {
-            idx: label
-            for label, idx in self.pattern_to_idx.items()
-        }
-
-        self.idx_to_category = {
-            idx: label
-            for label, idx in self.category_to_idx.items()
-        }
-
-        self.model = CycloneDetector(
-            num_patterns=len(self.pattern_to_idx),
-            num_categories=len(self.category_to_idx)
-        ).to(DEVICE)
-
-        self.model.load_state_dict(
-            checkpoint["model_state_dict"]
-        )
-
-        self.model.eval()
-
-
-    def detect_cyclone(self, image_path):
-
-        image = Image.open(
-            image_path
-        ).convert("RGB")
-
-        image_tensor = self.transform(
-            image
-        ).unsqueeze(0).to(DEVICE)
-
-        with torch.no_grad():
-
-            outputs = self.model(
-                image_tensor
-            )
-
-        presence_probability = torch.sigmoid(
-            outputs["presence"]
-        ).item()
-
-        detected = (
-            presence_probability >= 0.5
-        )
-
-        pattern_probabilities = torch.softmax(
-            outputs["pattern"],
-            dim=1
-        )[0]
-
-        pattern_index = torch.argmax(
-            pattern_probabilities
-        ).item()
-
-        pattern_confidence = (
-            pattern_probabilities[
-                pattern_index
-            ].item()
-        )
-
-        category_probabilities = torch.softmax(
-            outputs["category"],
-            dim=1
-        )[0]
-
-        category_index = torch.argmax(
-            category_probabilities
-        ).item()
-
-        category_confidence = (
-            category_probabilities[
-                category_index
-            ].item()
-        )
-
-        result = {
-
-            "detected": detected,
-
-            "confidence": round(
-                presence_probability,
-                4
-            ),
-
-            "structural_pattern": self.idx_to_pattern[
-                pattern_index
-            ],
-
-            "pattern_confidence": round(
-                pattern_confidence,
-                4
-            ),
-
-            "category": self.idx_to_category[
-                category_index
-            ],
-
-            "category_confidence": round(
-                category_confidence,
-                4
-            )
-        }
-
-        return result
-
-
-def detect_cyclone(image_path):
-
-    detector = CycloneInference()
-
-    return detector.detect_cyclone(
-        image_path
-    )
-
+    return {
+        "detected": detected,
+        "confidence": round(pres_prob if detected else 1.0 - pres_prob, 3),
+        "structural_pattern": pattern_name,
+        "pattern_confidence": round(pat_conf, 3),
+        "category": cat_name,
+        "bbox": bbox
+    }
 
 if __name__ == "__main__":
-
-    print(
-        "Cyclone inference module ready."
-    )
+    test_img = "data/processed/classification/image_only_kaggle/images/101.jpg"
+    if os.path.exists(test_img):
+        res = detect_cyclone(test_img)
+        print("Sample Detection Result:", res)

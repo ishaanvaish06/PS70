@@ -1,24 +1,13 @@
 {
-  "metrics_comparison": {
-    "image_only_model": {
-      "category_accuracy_percent": 38.1,
-      "category_macro_f1": 0.2076,
-      "wind_speed_mae_kmh": 109.81,
-      "wind_speed_rmse_kmh": 118.39
-    },
-    "multisource_model": {
-      "category_accuracy_percent": 47.0,
-      "category_macro_f1": 0.3703,
-      "wind_speed_mae_kmh": 18.84,
-      "wind_speed_rmse_kmh": 27.28,
-      "pressure_mae_hpa": 5.11,
-      "pressure_rmse_hpa": 8.33
-    },
-    "performance_delta": {
-      "accuracy_lift_percent": "+8.91%",
-      "macro_f1_lift": "+0.1627",
-      "wind_mae_reduction_kmh": "-90.97 km/h",
-      "wind_rmse_reduction_kmh": "-91.12 km/h"
-    }
+  "tabular_multisource_model": {
+    "category_accuracy_percent": 45.62,
+    "category_macro_f1": 0.3286,
+    "wind_speed_mae_kmh": 19.05,
+    "pressure_mae_hpa": 5.3
+  },
+  "multispectral_satellite_cnn": {
+    "category_accuracy_percent": 23.81,
+    "category_macro_f1": 0.1467,
+    "wind_speed_mae_kmh": 102.83
   }
 }

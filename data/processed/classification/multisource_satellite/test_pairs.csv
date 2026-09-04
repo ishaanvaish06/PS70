@@ -1,0 +1,22 @@
+filename,path_ir,path_vis,wind_speed_kt,wind_speed_kmh,category,imd_code,category_idx
+46.jpg,data/processed/classification/multisource_satellite/images_ir/46.jpg,data/processed/classification/multisource_satellite/images_vis/46.jpg,46.0,85.2,Cyclonic Storm,CS,2
+35(1).jpg,data/processed/classification/multisource_satellite/images_ir/35(1).jpg,data/processed/classification/multisource_satellite/images_vis/35(1).jpg,35.0,64.8,Cyclonic Storm,CS,2
+106.jpg,data/processed/classification/multisource_satellite/images_ir/106.jpg,data/processed/classification/multisource_satellite/images_vis/106.jpg,106.0,196.3,Extremely Severe Cyclonic Storm,ESCS,5
+35(3).jpg,data/processed/classification/multisource_satellite/images_ir/35(3).jpg,data/processed/classification/multisource_satellite/images_vis/35(3).jpg,35.0,64.8,Cyclonic Storm,CS,2
+67(1).jpg,data/processed/classification/multisource_satellite/images_ir/67(1).jpg,data/processed/classification/multisource_satellite/images_vis/67(1).jpg,67.0,124.1,Very Severe Cyclonic Storm,VSCS,4
+64.jpg,data/processed/classification/multisource_satellite/images_ir/64.jpg,data/processed/classification/multisource_satellite/images_vis/64.jpg,64.0,118.5,Very Severe Cyclonic Storm,VSCS,4
+81.jpg,data/processed/classification/multisource_satellite/images_ir/81.jpg,data/processed/classification/multisource_satellite/images_vis/81.jpg,81.0,150.0,Very Severe Cyclonic Storm,VSCS,4
+60(1).jpg,data/processed/classification/multisource_satellite/images_ir/60(1).jpg,data/processed/classification/multisource_satellite/images_vis/60(1).jpg,60.0,111.1,Severe Cyclonic Storm,SCS,3
+83(1).jpg,data/processed/classification/multisource_satellite/images_ir/83(1).jpg,data/processed/classification/multisource_satellite/images_vis/83(1).jpg,83.0,153.7,Very Severe Cyclonic Storm,VSCS,4
+53(3).jpg,data/processed/classification/multisource_satellite/images_ir/53(3).jpg,data/processed/classification/multisource_satellite/images_vis/53(3).jpg,53.0,98.2,Severe Cyclonic Storm,SCS,3
+59.jpg,data/processed/classification/multisource_satellite/images_ir/59.jpg,data/processed/classification/multisource_satellite/images_vis/59.jpg,59.0,109.3,Severe Cyclonic Storm,SCS,3
+58(1).jpg,data/processed/classification/multisource_satellite/images_ir/58(1).jpg,data/processed/classification/multisource_satellite/images_vis/58(1).jpg,58.0,107.4,Severe Cyclonic Storm,SCS,3
+85(1).jpg,data/processed/classification/multisource_satellite/images_ir/85(1).jpg,data/processed/classification/multisource_satellite/images_vis/85(1).jpg,85.0,157.4,Very Severe Cyclonic Storm,VSCS,4
+99.jpg,data/processed/classification/multisource_satellite/images_ir/99.jpg,data/processed/classification/multisource_satellite/images_vis/99.jpg,99.0,183.3,Extremely Severe Cyclonic Storm,ESCS,5
+34.jpg,data/processed/classification/multisource_satellite/images_ir/34.jpg,data/processed/classification/multisource_satellite/images_vis/34.jpg,34.0,63.0,Cyclonic Storm,CS,2
+48(3).jpg,data/processed/classification/multisource_satellite/images_ir/48(3).jpg,data/processed/classification/multisource_satellite/images_vis/48(3).jpg,48.0,88.9,Cyclonic Storm,CS,2
+52.jpg,data/processed/classification/multisource_satellite/images_ir/52.jpg,data/processed/classification/multisource_satellite/images_vis/52.jpg,52.0,96.3,Severe Cyclonic Storm,SCS,3
+69(1).jpg,data/processed/classification/multisource_satellite/images_ir/69(1).jpg,data/processed/classification/multisource_satellite/images_vis/69(1).jpg,69.0,127.8,Very Severe Cyclonic Storm,VSCS,4
+31.jpg,data/processed/classification/multisource_satellite/images_ir/31.jpg,data/processed/classification/multisource_satellite/images_vis/31.jpg,31.0,57.4,Deep Depression,DD,1
+61.jpg,data/processed/classification/multisource_satellite/images_ir/61.jpg,data/processed/classification/multisource_satellite/images_vis/61.jpg,61.0,113.0,Severe Cyclonic Storm,SCS,3
+65.jpg,data/processed/classification/multisource_satellite/images_ir/65.jpg,data/processed/classification/multisource_satellite/images_vis/65.jpg,65.0,120.4,Very Severe Cyclonic Storm,VSCS,4

@@ -105,7 +105,6 @@ class CycloneImageDataset(Dataset):
         if self.transform is not None:
             img = self.transform(img)
         else:
-            img = img.resize((256, 256))
             img = np.array(img, dtype=np.float32) / 255.0
 
         if TORCH_AVAILABLE:
@@ -116,3 +115,41 @@ class CycloneImageDataset(Dataset):
             wind_kmh = torch.tensor(wind_kmh, dtype=torch.float32)
 
         return img, cat_idx, wind_kmh
+
+class MultispectralSatelliteDataset(Dataset):
+    """
+    Dual-sensor multi-source satellite dataset pairing INSAT-3D
+    Thermal Infrared (IR) and Visible (VIS) channels for each cyclone.
+    Returns: (img_ir, img_vis), category_idx, wind_speed_kmh
+    """
+    def __init__(self, split="train", data_dir="data/processed/classification/multisource_satellite", transform=None):
+        self.split = split
+        self.data_dir = data_dir
+        self.transform = transform
+        csv_file = os.path.join(data_dir, f"{split}_pairs.csv")
+        if not os.path.exists(csv_file):
+            raise FileNotFoundError(f"Pairs file not found: {csv_file}")
+        self.df = pd.read_csv(csv_file)
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        row = self.df.iloc[idx]
+        img_ir = Image.open(row["path_ir"]).convert("L").resize((256, 256))
+        img_vis = Image.open(row["path_vis"]).convert("L").resize((256, 256))
+
+        arr_ir = np.array(img_ir, dtype=np.float32) / 255.0
+        arr_vis = np.array(img_vis, dtype=np.float32) / 255.0
+        # Stack channels: (2, 256, 256)
+        stacked = np.stack([arr_ir, arr_vis], axis=0)
+
+        cat_idx = int(row["category_idx"])
+        wind_kmh = float(row["wind_speed_kmh"])
+
+        if TORCH_AVAILABLE:
+            stacked = torch.from_numpy(stacked)
+            cat_idx = torch.tensor(cat_idx, dtype=torch.long)
+            wind_kmh = torch.tensor(wind_kmh, dtype=torch.float32)
+
+        return stacked, cat_idx, wind_kmh
