@@ -19,7 +19,8 @@ from torch.utils.data import TensorDataset, Dataset, DataLoader
 from src.forecasting.multimodal_forecaster import MultimodalCycloneForecaster
 from src.forecasting.forecaster import torch_haversine
 
-GLOBAL_DATA_FILE = os.path.join("data", "processed", "forecasting", "global_pretrain_sequences.npz")
+MULTIBASIN_FILE = os.path.join("data", "processed", "forecasting", "multibasin_pretrain_sequences.npz")
+GLOBAL_DATA_FILE = MULTIBASIN_FILE if os.path.exists(MULTIBASIN_FILE) else os.path.join("data", "processed", "forecasting", "global_pretrain_sequences.npz")
 NIO_DATA_FILE = os.path.join("data", "processed", "forecasting", "multimodal_sequences", "multimodal_forecasting_dataset.npz")
 PRETRAIN_CKPT = os.path.join("models", "forecasting", "global_pretrained_backbone.pt")
 FINAL_MODEL_PATH = os.path.join("models", "forecasting", "multimodal_forecast_model.pt")
@@ -71,12 +72,12 @@ class GlobalKinematicForecaster(nn.Module):
         p24 = torch.cat([base_24h_lat + c24[:, 0:1], base_24h_lon + c24[:, 1:2], torch.relu(c[:, 2:3] + c24[:, 2:3])], dim=1)
         return torch.stack([p6, p12, p24], dim=1)
 
-def run_stage_1_pretraining(device, epochs=10):
+def run_stage_1_pretraining(device, epochs=10, force=False):
     print("\n" + "=" * 70)
-    print("STAGE 1: PRE-TRAINING ON 44,251 GLOBAL CYCLONE TRACKS (WP + NA BASINS)")
+    print("STAGE 1: PRE-TRAINING ON 76,100 MULTI-BASIN CYCLONE TRACKS (WP + SI + NA BASINS)")
     print("=" * 70)
 
-    if os.path.exists(PRETRAIN_CKPT):
+    if os.path.exists(PRETRAIN_CKPT) and not force:
         print(f"Pre-trained Stage 1 weights already exist at: {PRETRAIN_CKPT}. Skipping re-training.")
         return
 
@@ -353,10 +354,10 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    # Stage 1: Global Pre-training
-    run_stage_1_pretraining(device, epochs=10)
+    # Stage 1: Multi-Basin Pre-training (76,100 sequences from WP + SI + NA)
+    run_stage_1_pretraining(device, epochs=10, force=True)
 
-    # Stage 2: Multimodal Fine-Tuning with Annulus Environmental Steering, VWS, and 2D Subtropical Ridge
+    # Stage 2: Multimodal Fine-Tuning with Annulus Environmental Steering, VWS, and 2D Subtropical Ridge (3,966 sequences)
     run_stage_2_finetuning(device, epochs=25)
 
 if __name__ == "__main__":
