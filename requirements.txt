@@ -1,0 +1,4 @@
+# Python 3.14 / Windows CUDA 12.6 wheels.
+# The torch wheel is kept outside GitHub because it exceeds GitHub's 2 GB LFS limit.
+./wheels/torch-2.14.0+cu126-cp314-cp314-win_amd64.whl
+./wheels/torchvision-0.29.0+cu126-cp314-cp314-win_amd64.whl
