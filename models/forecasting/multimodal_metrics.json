@@ -1,12 +1,12 @@
 {
-  "track_error_6h_km": 35.688663482666016,
-  "track_error_6h_median_km": 25.851137161254883,
-  "track_error_12h_km": 72.82791900634766,
-  "track_error_12h_median_km": 58.82354736328125,
-  "track_error_24h_km": 161.79652404785156,
-  "track_error_24h_median_km": 135.5983123779297,
-  "wind_mae_6h_kmh": 5.472944259643555,
-  "wind_mae_12h_kmh": 10.4837007522583,
-  "wind_mae_24h_kmh": 19.6851806640625,
-  "wind_mae_kmh": 11.965394020080566
+  "track_error_6h_km": 60.089229583740234,
+  "track_error_6h_median_km": 47.754432678222656,
+  "track_error_12h_km": 110.02115631103516,
+  "track_error_12h_median_km": 86.59148406982422,
+  "track_error_24h_km": 250.5563201904297,
+  "track_error_24h_median_km": 188.6775665283203,
+  "wind_mae_6h_kmh": 5.472075462341309,
+  "wind_mae_12h_kmh": 10.469390869140625,
+  "wind_mae_24h_kmh": 19.68825912475586,
+  "wind_mae_kmh": 11.961385726928711
 }
