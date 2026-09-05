@@ -1,5 +1,12 @@
-﻿# Git ignore
+# Git ignore
 __pycache__/
 *.pyc
 data/raw/ibtracs_global/
 data/raw/era5_pressure_levels/
+data/raw/era5_vws/
+data/raw/satellite_continuous/
+data/metadata/ibtracs_with_ridge_and_vws.csv
+data/processed/forecasting/ridge_grids/
+*.nc
+*.npz
+

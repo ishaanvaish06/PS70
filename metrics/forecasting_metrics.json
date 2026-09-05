@@ -1,0 +1,42 @@
+{
+  "model_name": "MultimodalCycloneForecaster",
+  "version": "2.0-ridge-vws-huber",
+  "timestamp": "2026-09-05T09:38:20+05:30",
+  "architecture": {
+    "satellite_video_encoder": "3-layer Conv2D + AdaptiveAvgPool + GRU (128-dim)",
+    "atmospheric_steering_vws": "10-dim (z500, u500, v500, u700, v700, u850, v850, u200, v200, vws_mag) + GRU (128-dim)",
+    "subtropical_ridge_encoder": "3-layer Conv2D + 30% Dropout + Linear (64-dim, 16x16 grid at 500 hPa)",
+    "fusion_dimension": 320,
+    "fusion_dropout": 0.3,
+    "residual_anchor": "Physical Kinematic Persistence Base"
+  },
+  "training": {
+    "stage_1_global_pretrain": "44,251 global cyclone tracks (WP + NA basins)",
+    "stage_2_multimodal_finetuning": "1,112 North Indian Ocean sequences (791 train, 123 val, 198 test)",
+    "loss_function": "Robust Huber Loss on Haversine distance (delta: 30km, 50km, 80km) + SmoothL1 Wind MAE",
+    "optimizer": "AdamW (lr=1e-3, weight_decay=1e-3, CosineAnnealingLR)"
+  },
+  "evaluation_holdout_test_set": {
+    "num_test_sequences": 198,
+    "test_storms": ["MICHAUNG", "ASNA", "GULAB:SHAHEEN-GU", "UNNAMED"],
+    "leakage_prevention": "Strict storm-level partition by cyclone_id"
+  },
+  "test_metrics": {
+    "track_error_6h_median_km": 24.48,
+    "track_error_6h_mean_km": 29.38,
+    "track_error_12h_median_km": 51.61,
+    "track_error_12h_mean_km": 63.99,
+    "track_error_24h_median_km": 114.99,
+    "track_error_24h_mean_km": 135.52,
+    "wind_speed_mae_6h_kmh": 2.48,
+    "wind_speed_mae_12h_kmh": 4.49,
+    "wind_speed_mae_24h_kmh": 8.70,
+    "overall_wind_speed_mae_kmh": 5.17
+  },
+  "benchmark_targets": {
+    "track_error_6h_target_km": "< 25.0 km (Met: 24.48 km)",
+    "track_error_12h_target_km": "< 50.0 km (Near: 51.61 km)",
+    "track_error_24h_target_km": "< 100.0 km (114.99 km median / 135.52 km mean)",
+    "wind_speed_mae_target_kmh": "< 15.0 km/h (Met: 5.17 km/h)"
+  }
+}
