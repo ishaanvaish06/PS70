@@ -192,3 +192,19 @@ def forecast_cyclone(history_sequence):
 | **Day 6** | Calculate Haversine track errors at +6h, +12h, and +24h; compare vs Baseline. |
 | **Day 7** | Implement standardized `forecast_cyclone()` inference function and plot track maps. |
 | **Day 8** | **FINAL HANDOFF:** Deliver model weights, inference scripts, metrics report, and README. |
+
+---
+
+## 🌐 8. What Additional Data Is Required to Guarantee the Targets?
+
+To reliably push the mean error under $100\text{ km}$ at 24h and under $50\text{ km}$ at 12h, the project needs:
+
+1. **Expand ERA5 Historical Coverage back to 2010–2021:**
+   - **Volume:** ~10 years of ERA5 reanalysis for the North Indian Ocean ($500\text{ hPa}, 850\text{ hPa}, 200\text{ hPa}$).
+   - **Impact:** Eliminates zero-filled missing values across all 1,112 timesteps and adds another ~2,500 historical cyclone timesteps (Phailin, Fani, Hudhud, Amphan, Tauktae).
+2. **Include Adjacent Basin Tracks (Western North Pacific / South Indian Ocean):**
+   - **Physics:** Physics of steering flow and vertical wind shear are identical across ocean basins.
+   - **Volume & Diversity:** Adding 5–10 years of Western North Pacific typhoon tracks (via IBTrACS + ERA5) multiplies training samples from $1,112 \to 15,000+$, exposing the network to hundreds of recurvature and stalling scenarios.
+3. **Download 1,000+ INSAT-3D/3DR Satellite Frames from MOSDAC/NRL:**
+   - **Visual Resolution:** Replaces padded image sequences with real thermal infrared (TIR-1 $10.8\mu\text{m}$) and water vapor (WV $6.9\mu\text{m}$) imagery for all storms since 2014.
+
