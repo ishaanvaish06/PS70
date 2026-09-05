@@ -1,4 +1,4 @@
-# 🌀 SIH 2026 — PS 26070: Tropical Cyclone AI/ML System
+# SIH 2026 — PS 26070: Tropical Cyclone AI/ML System
 
 <p align="center">
   <img src="https://img.shields.io/badge/SIH%202026-Problem%20Statement%2026070-007acc?style=for-the-badge&logo=target" alt="SIH 2026"/>
@@ -11,7 +11,7 @@
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 **Problem Statement 26070 (SIH 2026)** focuses on building an **end-to-end AI/ML decision-support system** for the **Ministry of Earth Sciences (MoES)** and **India Meteorological Department (IMD)** to identify, classify, and forecast tropical cyclone patterns in the **North Indian Ocean (NIO) Basin** (Bay of Bengal and Arabian Sea).
 
@@ -22,39 +22,39 @@ By unifying **NOAA IBTrACS v04r01** best-track ground truth, **ECMWF ERA5** high
 
 ---
 
-## 📑 Table of Contents
+##  Table of Contents
 
-- [✨ Key Highlights & Capabilities](#-key-highlights--capabilities)
-- [🏗️ End-to-End System Architecture](#️-end-to-end-system-architecture)
-- [📁 Repository Structure](#-repository-structure)
-- [📊 Dataset Specifications & Catalog](#-dataset-specifications--catalog)
-- [🏷️ IMD / RSMC Intensity Classification Scale](#️-imd--rsmc-intensity-classification-scale)
-- [🚀 Quickstart & PyTorch DataLoaders](#-quickstart--pytorch-dataloaders)
-- [🧠 Subsystem Implementation Deep-Dives (Future Tasks)](#-subsystem-implementation-deep-dives-future-tasks)
+- [ Key Highlights & Capabilities](#-key-highlights--capabilities)
+- [ End-to-End System Architecture](#️-end-to-end-system-architecture)
+- [ Repository Structure](#-repository-structure)
+- [ Dataset Specifications & Catalog](#-dataset-specifications--catalog)
+- [ IMD / RSMC Intensity Classification Scale](#️-imd--rsmc-intensity-classification-scale)
+- [ Quickstart & PyTorch DataLoaders](#-quickstart--pytorch-dataloaders)
+- [ Subsystem Implementation Deep-Dives (Future Tasks)](#-subsystem-implementation-deep-dives-future-tasks)
   - [Person 2: Cyclone Detection & Structural Pattern Recognition](#-person-2-cyclone-detection--structural-pattern-recognition)
   - [Person 3: Multi-Source Classification & Intensity Estimation](#-person-3-multi-source-classification--intensity-estimation)
   - [Person 4: Spatiotemporal Trajectory & Wind Forecasting](#-person-4-spatiotemporal-trajectory--wind-forecasting)
   - [Person 5: Web Dashboard & System Integration](#-person-5-web-dashboard--system-integration)
 - [🔗 Unified API Contract (`/api/analyze`)](#-unified-api-contract-apianalyze)
-- [📅 Consolidated 8-Day Development Roadmap](#-consolidated-8-day-development-roadmap)
-- [🔄 Data Pipeline Reproduction](#-data-pipeline-reproduction)
-- [✅ QA & Verification Pipeline](#-qa--verification-pipeline)
-- [📜 License & Acknowledgments](#-license--acknowledgments)
+- [ Consolidated 8-Day Development Roadmap](#-consolidated-8-day-development-roadmap)
+- [ Data Pipeline Reproduction](#-data-pipeline-reproduction)
+- [ QA & Verification Pipeline](#-qa--verification-pipeline)
+- [ License & Acknowledgments](#-license--acknowledgments)
 
 ---
 
-## ✨ Key Highlights & Capabilities
+##  Key Highlights & Capabilities
 
-- 🛰️ **Multi-Source Environmental Reanalysis Fusion**: Exact spatiotemporal alignment of ECMWF ERA5 variables (Sea Surface Temperature, Mean Sea Level Pressure, 10m U/V Wind components) against NOAA IBTrACS tracks across 1980–2025 with **100.0% coverage (0 missing values)**.
-- 🛡️ **Zero-Data-Leakage Cyclone-Level Partitioning**: Strict 70% Train / 15% Validation / 15% Test dataset splits partitioned exclusively by distinct `cyclone_id` entities, preventing temporal and spatial cross-contamination.
-- ⏱️ **Sliding-Window Temporal Sequences**: 3,076 sliding-window temporal sequence arrays ($t-24\text{h} \dots t$) paired with future forecasting vectors ($t+6\text{h}, t+12\text{h}, t+24\text{h}$).
-- 📦 **Plug-and-Play PyTorch DataLoaders**: Modular dataset classes with built-in shape assertions, feature normalization metrics, and near-real-time satellite frame preprocessing.
-- 📈 **Standardized IMD Scale Compliance**: Direct mapping to RSMC New Delhi / IMD cyclone nomenclature, Dvorak T-number scales, central pressure deficit, and sustained wind speed bounds.
-- 📐 **Scientifically Rigorous Baselines & Metrics**: Persistence movement-vector baselines, Haversine Great-Circle distance evaluation, and multi-source comparative ablation studies.
+-  **Multi-Source Environmental Reanalysis Fusion**: Exact spatiotemporal alignment of ECMWF ERA5 variables (Sea Surface Temperature, Mean Sea Level Pressure, 10m U/V Wind components) against NOAA IBTrACS tracks across 1980–2025 with **100.0% coverage (0 missing values)**.
+-  **Zero-Data-Leakage Cyclone-Level Partitioning**: Strict 70% Train / 15% Validation / 15% Test dataset splits partitioned exclusively by distinct `cyclone_id` entities, preventing temporal and spatial cross-contamination.
+-  **Sliding-Window Temporal Sequences**: 3,076 sliding-window temporal sequence arrays ($t-24\text{h} \dots t$) paired with future forecasting vectors ($t+6\text{h}, t+12\text{h}, t+24\text{h}$).
+-  **Plug-and-Play PyTorch DataLoaders**: Modular dataset classes with built-in shape assertions, feature normalization metrics, and near-real-time satellite frame preprocessing.
+-  **Standardized IMD Scale Compliance**: Direct mapping to RSMC New Delhi / IMD cyclone nomenclature, Dvorak T-number scales, central pressure deficit, and sustained wind speed bounds.
+-  **Scientifically Rigorous Baselines & Metrics**: Persistence movement-vector baselines, Haversine Great-Circle distance evaluation, and multi-source comparative ablation studies.
 
 ---
 
-## 🏗️ End-to-End System Architecture
+##  End-to-End System Architecture
 
 ```mermaid
 flowchart TD
@@ -89,7 +89,7 @@ flowchart TD
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 PS70/
@@ -154,7 +154,7 @@ PS70/
 
 ---
 
-## 📊 Dataset Specifications & Catalog
+##  Dataset Specifications & Catalog
 
 | Dataset ID | Subsystem Target | Format / Modality | Sample Counts (Train / Val / Test) | Features / Tensor Shape | Target Variables |
 |---|---|---|---|---|---|
@@ -166,7 +166,7 @@ PS70/
 
 ---
 
-## 🏷️ IMD / RSMC Intensity Classification Scale
+##  IMD / RSMC Intensity Classification Scale
 
 All classification and regression targets conform strictly to the **India Meteorological Department (IMD) / Regional Specialized Meteorological Centre (RSMC) New Delhi** operational classification:
 
@@ -182,7 +182,7 @@ All classification and regression targets conform strictly to the **India Meteor
 
 ---
 
-## 🚀 Quickstart & PyTorch DataLoaders
+##  Quickstart & PyTorch DataLoaders
 
 The repository includes high-performance data loaders compatible with standard PyTorch `DataLoader` pipelines and standalone NumPy/Pandas environments.
 
@@ -261,13 +261,13 @@ python src/data/dataloader_example.py
 
 ---
 
-## 🧠 Subsystem Implementation Deep-Dives (Future Tasks)
+##  Subsystem Implementation Deep-Dives (Future Tasks)
 
 This section consolidates all implementation specifications, loss formulations, architectural designs, and handoff requirements from the [`future_task/`](file:///D:/AVV/SIH2026/PS70/future_task/tasks.md) technical guides.
 
 ---
 
-### 👁️ Person 2: Cyclone Detection & Structural Pattern Recognition
+###  Person 2: Cyclone Detection & Structural Pattern Recognition
 *Detailed Guide:* [`future_task/tasks2.md`](file:///D:/AVV/SIH2026/PS70/future_task/tasks2.md)
 
 #### 1. Objectives & Meteorological Patterns
@@ -337,7 +337,7 @@ Person 3 evaluates cyclone severity through dual deliverables:
 
 ---
 
-### 🗺️ Person 4: Spatiotemporal Trajectory & Wind Forecasting
+###  Person 4: Spatiotemporal Trajectory & Wind Forecasting
 *Detailed Guide:* [`future_task/tasks4.md`](file:///D:/AVV/SIH2026/PS70/future_task/tasks4.md)
 
 #### 1. Objectives & Multi-Horizon Targets
@@ -464,7 +464,7 @@ Downstream models converge into a single unified JSON schema consumed by the fro
 
 ---
 
-## 🔄 Data Pipeline Reproduction
+##  Data Pipeline Reproduction
 
 To rebuild the entire multi-source dataset from scratch:
 
@@ -490,7 +490,7 @@ python scripts/qa_visualization.py
 
 ---
 
-## ✅ QA & Verification Pipeline
+##  QA & Verification Pipeline
 
 - **Automated Validation**: Run `python scripts/qa_visualization.py` to regenerate all QA reports and visual artifacts in `data/qa_reports/`.
 - **Validation Artifacts**:
@@ -502,7 +502,7 @@ python scripts/qa_visualization.py
 
 ---
 
-## 📜 License & Acknowledgments
+##  License & Acknowledgments
 
 - **License**: Released under the [MIT License](file:///D:/AVV/SIH2026/PS70/LICENSE).
 - **Data Acknowledgments**:
